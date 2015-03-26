@@ -63,7 +63,7 @@ def rmdir(path):
 		key.delete()
 
 def delete(path):
-	key.key(path)
+	key.key = path
 	key.delete()
 
 ### End Function Defs ###

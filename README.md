@@ -25,3 +25,7 @@ The easiest way to do this is just `pip install boto filechunkio` if you have `p
 1. `Remote Password` is going to be the secret key that is associated with the access key that you're using
 
 Really, that should be it
+
+## Logging ##
+
+This script will log operations it performs when called. When cPanel does its schedule backup runs, the logs should be located in /root/log

@@ -75,6 +75,7 @@ def get(remoteFile, localFile):
 	key.get_contents_to_filename(localFile)
 
 def put(localFile, remoteFile):
+	t1 = time.time()
 
 	fileSize = os.stat(localFile).st_size
 
@@ -122,6 +123,9 @@ def put(localFile, remoteFile):
 		# Finish the send
 		logging.info(logTime() + ' :: Combining file parts')
 		multiPart.complete_upload()
+
+	t2 = time.time()
+	logging.info(logTime() + ' :: ' + str(t2 - t1) + ' seconds to send ' + localFile)
 
 def ls(path):
 	keyList = objStoreBucket.get_all_keys(prefix = path[1:]) # The slice is to knock off the first / since this won't exist in the key

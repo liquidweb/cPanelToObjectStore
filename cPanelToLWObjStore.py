@@ -47,7 +47,7 @@ def logTime():
 
 ### Setup threading
 threadList = [] # So we can iterate against this and setup the join.
-THREADS = 10; # Adjust as needed
+THREADS = 5 # Adjust as needed
 
 class chunkWorker(Thread):
 	def __init__(self, queue):
@@ -85,7 +85,7 @@ def put(localFile, remoteFile):
 		key.set_contents_from_filename(localFile)
 
 	else:
-		logging.info(logTime() + ' :: Sending file in multiple parts')
+		logging.info(logTime() + ' :: Sending file in multiple parts using ' + str(THREADS) + ' threads')
 		multiPart = objStoreBucket.initiate_multipart_upload(remoteFile)
 
 		# Establish chunk size and count

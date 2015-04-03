@@ -29,3 +29,9 @@ Really, that should be it
 ## Logging ##
 
 This script will log operations it performs when called. When cPanel does its schedule backup runs, the logs should be located in /root/log
+
+If cPanel backups are run manually, the log directory should exist in the present working directory that the backup is fired off from.
+
+## Threading ##
+
+When a file is uploaded in multiple parts, threading will be used. By default, four threads will be used, however this is easilly adjusted by changing the `THREADS` variable.

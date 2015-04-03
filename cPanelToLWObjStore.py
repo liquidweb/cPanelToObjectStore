@@ -47,7 +47,7 @@ def logTime():
 
 ### Setup threading
 threadList = [] # So we can iterate against this and setup the join.
-THREADS = 5 # Adjust as needed
+THREADS = 4 # Adjust as needed
 
 class chunkWorker(Thread):
 	def __init__(self, queue):

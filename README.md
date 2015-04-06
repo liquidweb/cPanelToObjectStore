@@ -9,9 +9,15 @@ I assume the user understands the concept of access keys, secret keys, buckets, 
 
 ## Requirements ##
 
-In order to use this script, the [`boto`](https://github.com/boto/boto), [`isodate`](https://pypi.python.org/pypi/isodate) and [`filechunkio`](https://pypi.python.org/pypi/filechunkio/) python libraries need to be installed.
+In order to use this script, the following python libraries need to be installed:
 
-The easiest way to do this is just `pip install boto filechunkio isodate` if you have `pip` installed.
+1. [`boto`](https://github.com/boto/boto)
+1. [`isodate`](https://pypi.python.org/pypi/isodate)
+1. [`pytz`](https://pypi.python.org/pypi/pytz/)
+1. [`filechunkio`](https://pypi.python.org/pypi/filechunkio/)
+1. [`tzlocal`](https://pypi.python.org/pypi/tzlocal)
+
+The easiest way to do this is just `pip install boto filechunkio isodate pytz tzlocal` if you have `pip` installed.
 
 ## Usage ##
 

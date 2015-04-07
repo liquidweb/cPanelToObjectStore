@@ -137,6 +137,7 @@ def ls(path):
 	lsData = {}
 	sizeLength = 0 # This will be used to determine the width of the size column
 	fileLength = 0 # This will be used to determine the width of the file column
+	dateLength = 1 # This will be used to determin the width of the day column
 
 	if path[0] is '/':
 		keyList = objStoreBucket.get_all_keys(prefix = path[1:]) # The slice is to knock off the first / since this won't exist in the key
@@ -186,6 +187,8 @@ def ls(path):
 					sizeLength = len(sdir['size'])
 				if len(sdir['file']) > fileLength:
 					fileLength = len(sdir['file'])
+				if len(sdir['day']) > 1:
+					dateLength = 2
 		else:
 			keyName = keySplit[0]
 			keySize	= key.size
@@ -204,13 +207,15 @@ def ls(path):
 				sizeLength = len(keyData['size'])
 			if len(keyData['file']) > fileLength:
 				fileLength = len(keyData['file'])
+			if len(keyData['day']) > 1:
+				dateLength = 2
 
 	# Bring in subdir stuff
 	for skey, svalue in subDirList.iteritems():
 		lsData[skey] = svalue
 
 	# Output
-	lsFmt = '{perms} {hardcnt} {owner} {group} {size: >' + str(sizeLength) + '} {month} {day} {time} {file: >' + str(fileLength) + '}'
+	lsFmt = '{perms} {hardcnt} {owner} {group} {size: >' + str(sizeLength) + '} {month} {day: >' + str(dateLength) + '} {time} {file: >' + str(fileLength) + '}'
 	for k, v in lsData.iteritems():
 		print lsFmt.format(**v)
 	#pprint(lsData) #DEBUG

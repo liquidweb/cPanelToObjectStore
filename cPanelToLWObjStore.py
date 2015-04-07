@@ -226,7 +226,11 @@ def chdir(path):
 	print path
 
 def rmdir(path):
-	keyList = objStoreBucket.get_all_keys(prefix = path[1:])
+	if path[0] is '/':
+		keyList = objStoreBucket.get_all_keys(prefix = path[1:])
+	else:
+		keyList = objStoreBucket.get_all_keys(prefix = path)
+
 	for key in keyList:
 		key.delete()
 

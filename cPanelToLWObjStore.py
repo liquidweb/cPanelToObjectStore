@@ -4,13 +4,14 @@ This script facilitates using Liquid Web's Object Storage for cPanel/WHM backups
 """
 
 ### Import things ###
-import sys, os, boto, math, logging, time, os.path, traceback
+import sys, os, boto, math, logging, time, os.path, traceback, isodate
 from boto.s3.connection import S3Connection
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 from filechunkio import FileChunkIO
 from Queue import Queue
 from threading import Thread
+from tzlocal import get_localzone
 
 ### Get the command line args ###
 command, pwd = sys.argv[1:3]
@@ -128,15 +129,91 @@ def put(localFile, remoteFile):
 	logging.info(logTime() + ' :: ' + str(t2 - t1) + ' seconds to send ' + localFile)
 
 def ls(path):
-	keyList = objStoreBucket.get_all_keys(prefix = path[1:]) # The slice is to knock off the first / since this won't exist in the key
+	#
+	# If the end of the path contains a slash, it will break. I'll fix this later if needed
+	#
+
+	subDirList = {}
+	lsData = {}
+	sizeLength = 0 # This will be used to determine the width of the size column
+	fileLength = 0 # This will be used to determine the width of the file column
+
+	if path[0] is '/':
+		keyList = objStoreBucket.get_all_keys(prefix = path[1:]) # The slice is to knock off the first / since this won't exist in the key
+		pathComponent = path.split('/')[1:] # Split the path into components. The slice is because the first element is empty from the split
+	else:
+		keyList = objStoreBucket.get_all_keys(prefix = path)
+		pathComponent = path.split('/')
+
+	prefixSize = len(pathComponent) # Get the length so we know where to start looking at the key name
+
 	for key in keyList:
-		keyName = key.name.split('/')[-1]
-		keySize	= key.size
-		keyDate = key.last_modified
-		keyMeta = key.metadata
+		keySplit = key.name.split('/')[prefixSize:] # Get rid of the leading prefix stuff
+		
+		### Key modification time stuff - common to 'subdirectories' and 'real' files
+		keyDate = isodate.parse_datetime(key.last_modified).astimezone(get_localzone())
 
-		print str(keySize) + '\t' + keyDate + '\t' + keyName
+		keyTimeData = {}
 
+		keyTimeData['month']	= keyDate.strftime('%b')
+
+		if keyDate.strftime('%d')[0] is not '0': # Double digit day
+			keyTimeData['day']		= keyDate.strftime('%d')
+		else: # Single digit day - doing this to match ls -l mind you
+			keyTimeData['day']		= keyDate.strftime('%d')[1]
+
+		keyTimeData['time']		= keyDate.strftime('%H:%M')
+
+		## Other common stuff
+		owner = 'root'
+		group = 'root'
+
+		### Directory check
+		### Since there are no directories, per se, in Object Storage/S3, emulate subdirectories where appropriate
+		if len(keySplit) > 1: # We have a 'file in a subdirectory' if this is > 1
+			if keySplit[0] not in subDirList:
+				sdir = subDirList[keySplit[0]] = {}
+				for k, v in keyTimeData.iteritems():
+					sdir[k] = v
+				sdir['size'] = '4096'
+				sdir['perms'] = 'drwx------'
+				sdir['owner'] = owner
+				sdir['group'] = group
+				sdir['hardcnt'] = '2'
+				sdir['file'] = keySplit[0]
+
+				if len(sdir['size']) > sizeLength:
+					sizeLength = len(sdir['size'])
+				if len(sdir['file']) > fileLength:
+					fileLength = len(sdir['file'])
+		else:
+			keyName = keySplit[0]
+			keySize	= key.size
+
+			keyData = lsData[keyName] = {}
+			for k, v in keyTimeData.iteritems():
+				keyData[k] =  v
+			keyData['size'] = str(keySize)
+			keyData['perms'] = '-rwx------'
+			keyData['owner'] = owner
+			keyData['group'] = group
+			keyData['hardcnt'] = '1'
+			keyData['file'] = keyName
+
+			if len(keyData['size']) > sizeLength:
+				sizeLength = len(keyData['size'])
+			if len(keyData['file']) > fileLength:
+				fileLength = len(keyData['file'])
+
+	# Bring in subdir stuff
+	for skey, svalue in subDirList.iteritems():
+		lsData[skey] = svalue
+
+	# Output
+	lsFmt = '{perms} {hardcnt} {owner} {group} {size: >' + str(sizeLength) + '} {month} {day} {time} {file: >' + str(fileLength) + '}'
+	for k, v in lsData.iteritems():
+		print lsFmt.format(**v)
+	#pprint(lsData) #DEBUG
 def mkdir(path):
 	pass # You don't need to 'make' a directory in Object Storage since it's automagically created via the key on file upload
 
